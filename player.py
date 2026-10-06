@@ -34,7 +34,7 @@ class Player(CircleShape):
         shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED
 
     def draw(self, screen: pygame.Surface):
-        pygame.draw.polygon(screen, "white", self.triangle(), LINE_WIDTH)
+        pygame.draw.polygon(screen, "teal", self.triangle(), LINE_WIDTH)
 
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
