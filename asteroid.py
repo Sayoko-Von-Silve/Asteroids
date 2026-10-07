@@ -1,5 +1,5 @@
 import circleshape, pygame, random
-from constants import LINE_WIDTH, ASTEROID_MIN_RADIUS
+from constants import LINE_WIDTH, ASTEROID_MIN_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT
 from logger import log_event
 
 class Asteroid(circleshape.CircleShape):
@@ -31,3 +31,4 @@ class Asteroid(circleshape.CircleShape):
 
     def update(self, dt: float) -> None:
         self.position += self.velocity * dt
+        self.boundary_check(SCREEN_WIDTH, SCREEN_HEIGHT)
