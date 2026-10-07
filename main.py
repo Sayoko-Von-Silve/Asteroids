@@ -21,11 +21,12 @@ def main():
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
+    asteroidfield = pygame.sprite.Group()
     shots = pygame.sprite.Group()
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     Shot.containers = (shots, updatable, drawable)
-    AsteroidField.containers = (updatable)
+    AsteroidField.containers = (asteroidfield)
     astfield = AsteroidField()
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_RADIUS)
 
@@ -35,11 +36,15 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_KP1:
+                player.toggle_god_mode()
 
         # update game state
         updatable.update(dt)
+        asteroidfield.update(dt, score, len(asteroids))
+
         for asteroid in asteroids:
-            if asteroid.collides_with(player) and player.invuln_timer <= 0:
+            if asteroid.collides_with(player) and player.invuln_timer <= 0 and player.god_mode == False:
                 log_event("player_hit")
                 player.kill()
                 score -= asteroid.split() * 10
@@ -52,7 +57,7 @@ def main():
                     sys.exit()
                 player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_RADIUS)
                 break
-            if asteroid.collides_with(player) and player.invuln_timer > 0:
+            if asteroid.collides_with(player) and player.invuln_timer > 0 and player.god_mode == False:
                 score += asteroid.split()
                 break
             for shot in shots:

@@ -9,6 +9,8 @@ class Player(CircleShape):
         self.rotation = 180
         self.shoot_cooldown = 0
         self.invuln_timer = 3
+        self.god_mode = False
+        self.inputdelay = 0
 
     def triangle(self) -> list[pygame.Vector2]:
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -43,6 +45,16 @@ class Player(CircleShape):
             pygame.draw.circle(screen, "purple", (int(shield_center.x), int(shield_center.y)), self.radius + 6, LINE_WIDTH)
         elif self.invuln_timer > 0:
             pygame.draw.circle(screen, "magenta", (int(shield_center.x), int(shield_center.y)), self.radius + 7, LINE_WIDTH)
+        
+        if self.god_mode:
+            pygame.draw.circle(screen, "gold", (int(shield_center.x), int(shield_center.y)), self.radius + 8, LINE_WIDTH)
+
+    def toggle_god_mode(self):
+        if self.god_mode == False:
+            self.god_mode = True
+        else:
+            self.god_mode = False
+
 
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
@@ -52,6 +64,8 @@ class Player(CircleShape):
             self.shoot_cooldown = 0
         if self.invuln_timer > 0:
             self.invuln_timer -= dt
+        if self.inputdelay > 0:
+            self.inputdelay -= 1
 
         if keys[pygame.K_a]:
             self.rotate(-dt)
