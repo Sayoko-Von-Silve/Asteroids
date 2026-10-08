@@ -20,6 +20,12 @@ class Player(CircleShape):
         c = self.position - forward * self.radius + right
         return [a, b, c]
 
+    def triangle_godmode_overlay(self) -> list[pygame.Vector2]:
+        scale = 1.15
+        forward = pygame.Vector2(0, 1).rotate(self.rotation)
+        shift = forward * (self.radius * 0.07)
+        return [(self.position + (point - self.position) * scale ) + shift for point in self.triangle()]
+
     def rotate(self, dt):
         self.rotation += PLAYER_TURN_SPEED * dt
 
@@ -40,14 +46,15 @@ class Player(CircleShape):
     def draw(self, screen: pygame.Surface):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         shield_center = self.position - forward * (self.radius * 0.1)
-        pygame.draw.polygon(screen, "teal", self.triangle(), LINE_WIDTH)
+
+        if self.god_mode:
+            pygame.draw.polygon(screen, "gold", self.triangle_godmode_overlay(), LINE_WIDTH * 3)
+        pygame.draw.polygon(screen, "white", self.triangle(), 0)
+
         if self.invuln_timer > 0 and int(self.invuln_timer * 5) % 2 == 0:
             pygame.draw.circle(screen, "purple", (int(shield_center.x), int(shield_center.y)), self.radius + 6, LINE_WIDTH)
         elif self.invuln_timer > 0:
             pygame.draw.circle(screen, "magenta", (int(shield_center.x), int(shield_center.y)), self.radius + 7, LINE_WIDTH)
-        
-        if self.god_mode:
-            pygame.draw.circle(screen, "gold", (int(shield_center.x), int(shield_center.y)), self.radius + 8, LINE_WIDTH)
 
     def toggle_god_mode(self):
         if self.god_mode == False:

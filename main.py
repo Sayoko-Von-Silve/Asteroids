@@ -13,19 +13,21 @@ def main():
 
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    background = pygame.image.load("assets/modified_nebula.jpg").convert()
+    background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
     dt = 0.0
     score = 0
     lives = 3
     score_font = pygame.font.SysFont("Arial", 24)
+    shots = pygame.sprite.Group()
     updatable = pygame.sprite.Group()
     drawable = pygame.sprite.Group()
     asteroids = pygame.sprite.Group()
     asteroidfield = pygame.sprite.Group()
-    shots = pygame.sprite.Group()
+    Shot.containers = (shots, updatable, drawable)
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
-    Shot.containers = (shots, updatable, drawable)
     AsteroidField.containers = (asteroidfield)
     astfield = AsteroidField()
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_RADIUS)
@@ -40,14 +42,12 @@ def main():
                 player.toggle_god_mode()
 
         # update game state
-        updatable.update(dt)
         asteroidfield.update(dt, score, len(asteroids))
+        updatable.update(dt)
 
         for asteroid in asteroids:
             if asteroid.collides_with(player) and player.invuln_timer <= 0 and player.god_mode == False:
                 log_event("player_hit")
-                player.kill()
-                score -= asteroid.split() * 10
                 lives -= 1
                 if lives <= 0:
                     print("Game Over!")
@@ -55,6 +55,8 @@ def main():
                         score = 0
                     print(f"Final Score: {score}")
                     sys.exit()
+                player.kill()
+                score -= asteroid.split() * 10
                 player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_RADIUS)
                 break
             if asteroid.collides_with(player) and player.invuln_timer > 0 and player.god_mode == False:
@@ -63,14 +65,16 @@ def main():
             for shot in shots:
                 if asteroid.collides_with(shot):
                     log_event("asteroid_shot")
-                    score += asteroid.split()
                     shot.kill()
+                    score += asteroid.split()
                     break
 
         # update graphic state
-        screen.fill("black")
+        screen.blit(background, (0, 0))
         for obj in drawable:
-            obj.draw(screen)
+            if obj != player:
+                obj.draw(screen)
+        player.draw(screen)
 
 
         # draw score
