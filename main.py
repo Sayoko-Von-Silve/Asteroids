@@ -17,6 +17,8 @@ def main():
     background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
     dt = 0.0
+    game_time = 0.0
+    minutes, seconds = 0, 0
     score = 0
     lives = 3
     score_font = pygame.font.SysFont("Arial", 24)
@@ -77,19 +79,19 @@ def main():
         player.draw(screen)
 
 
-        # draw score
-        score_text = score_font.render(f"SCORE: [{score}]", True, "lightcoral")
-        lives_text = score_font.render(f"[{lives}] :LIVES", True, "lightcoral")
+        # draw score, lives, and time
+        score_text = score_font.render(f"SCORE: [{score}]", True, "firebrick2")
+        lives_text = score_font.render(f"[{lives}] :LIVES", True, "firebrick2")
+        time_text = score_font.render(f"[{minutes:02}:{seconds:02}]", True, "firebrick3")
         screen.blit(score_text, (10, 10))
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
+        screen.blit(time_text, ((SCREEN_WIDTH - time_text.get_width()) // 2, 10))
 
         pygame.display.flip()
 
         dt = clock.tick(60) / 1000
-
-
-
-
+        game_time += dt
+        minutes, seconds = divmod(int(game_time), 60)
 
 
 

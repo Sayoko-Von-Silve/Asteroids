@@ -7,8 +7,9 @@ class Shot(circleshape.CircleShape):
         super().__init__(x, y, radius)
         self.lifetime = 2.0 # seconds
 
-    def draw(self, surface: pygame.Surface, color = "magenta") -> None:
-        pygame.draw.circle(surface, color, (int(self.position.x), int(self.position.y)), self.radius)
+    def draw(self, surface: pygame.Surface, color = "white") -> None:
+        pygame.draw.circle(surface, "aquamarine2", (int(self.position.x), int(self.position.y)), self.radius)
+        pygame.draw.circle(surface, "magenta", (int(self.position.x), int(self.position.y)), self.radius - 2)
 
     def update(self, dt: float) -> None:
         self.lifetime -= dt
