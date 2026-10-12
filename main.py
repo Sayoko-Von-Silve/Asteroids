@@ -5,7 +5,7 @@ from player import Player
 from logger import log_state, log_event
 from asteroid import *
 from asteroidfield import AsteroidField
-from shot import Shot
+from shot import Shot, Bolt, Flak, Shrapnel
 
 def main():
     print(f"Starting Asteroids with pygame version: {pygame.version.ver}")
@@ -28,6 +28,9 @@ def main():
     asteroids = pygame.sprite.Group()
     asteroidfield = pygame.sprite.Group()
     Shot.containers = (shots, updatable, drawable)
+    Bolt.containers = (shots, updatable, drawable)
+    Flak.containers = (shots, updatable, drawable)
+    Shrapnel.containers = (shots, updatable, drawable)
     Player.containers = (updatable, drawable)
     Asteroid.containers = (asteroids, updatable, drawable)
     AsteroidField.containers = (asteroidfield)
@@ -40,7 +43,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_KP1:
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
                 player.toggle_god_mode()
 
         # update game state
@@ -67,8 +70,19 @@ def main():
             for shot in shots:
                 if asteroid.collides_with(shot):
                     log_event("asteroid_shot")
-                    shot.kill()
-                    score += asteroid.split()
+                    if shot.__class__ == Shot:
+                        shot.kill()
+                        score += asteroid.split()
+                    elif shot.__class__ == Bolt:
+                        shot.lifetime -= 1.2
+                        shot.splinter = True
+                        score += asteroid.split()
+                    elif shot.__class__ == Flak:
+                        shot.lifetime = 0
+                        score += asteroid.split()
+                    elif shot.__class__ == Shrapnel:
+                        shot.kill()
+                        score += asteroid.split()
                     break
 
         # update graphic state
