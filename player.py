@@ -10,8 +10,10 @@ class Player(CircleShape):
         self.shoot_cooldown = 0.0
         self.invuln_timer = 3
         self.god_mode = False
+        self.infinite_ammo = False
         self.inputdelay = 0
-        self.weapon_mode = 0
+        self.weapon_mode = ["Plasma Buster", 0]
+        self.weapon_ammo = 0
         self.pylon_gun_switch = 1
         self.pylon_palette = [("aquamarine4", "aquamarine3"), #plasma_buster - Perfect.
                               ("turquoise4", "turquoise3"), #pulse_cannon - different color scheme for shots desired.
@@ -91,15 +93,15 @@ class Player(CircleShape):
         self.boundary_check(SCREEN_WIDTH, SCREEN_HEIGHT)
 
     def use_weapon(self):
-        if self.weapon_mode == 0:
+        if self.weapon_mode[1] == 0:
             self.plasma_buster()
-        elif self.weapon_mode == 1:
+        elif self.weapon_mode[1] == 1:
             self.pulse_cannon()
-        elif self.weapon_mode == 2:
+        elif self.weapon_mode[1] == 2:
             self.shard_blaster()
-        elif self.weapon_mode == 3:
+        elif self.weapon_mode[1] == 3:
             self.bolt_caster()
-        elif self.weapon_mode == 4:
+        elif self.weapon_mode[1] == 4:
             self.flak_pulsar()
         #elif self.weapon_mode == 5:
         #    self.seeker_discs()
@@ -118,9 +120,15 @@ class Player(CircleShape):
         shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED
 
     def pulse_cannon(self):
+        if self.weapon_ammo < 1 and self.infinite_ammo == False:
+            return
         if self.shoot_cooldown > 0:
             return
         self.shoot_cooldown = 0.05
+        if not self.infinite_ammo:
+            self.weapon_ammo -= 1
+            if self.weapon_ammo < 0:
+                self.weapon_ammo = 0
         if self.pylon_gun_switch == 1:
             muzzle = self.triangle_pylonright()[0]
             self.pylon_gun_switch = 0
@@ -131,24 +139,42 @@ class Player(CircleShape):
         shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED * 1.2
 
     def shard_blaster(self):
+        if self.weapon_ammo < 1 and self.infinite_ammo == False:
+            return
         if self.shoot_cooldown > 0:
             return
         self.shoot_cooldown = 0.7
+        if not self.infinite_ammo:
+            self.weapon_ammo -= 2
+            if self.weapon_ammo < 0:
+                self.weapon_ammo = 0
         for i in range(0, 7):
             shot = Shot(self.position.x, self.position.y)
             shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation - 15 + (i * 5)) * PLAYER_SHOOT_SPEED * (random.randint(70, 100)/100)
 
     def bolt_caster(self):
+        if self.weapon_ammo < 1 and self.infinite_ammo == False:
+            return
         if self.shoot_cooldown > 0:
             return
         self.shoot_cooldown = 0.8
+        if not self.infinite_ammo:
+            self.weapon_ammo -= 3
+            if self.weapon_ammo < 0:
+                self.weapon_ammo = 0
         shot = Bolt(self.position.x, self.position.y)
         shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED * 1.5
 
     def flak_pulsar(self):
+        if self.weapon_ammo < 1 and self.infinite_ammo == False:
+            return
         if self.shoot_cooldown > 0:
             return
         self.shoot_cooldown = 1
+        if not self.infinite_ammo:
+            self.weapon_ammo -= 3
+            if self.weapon_ammo < 0:
+                self.weapon_ammo = 0
         shot = Flak(self.position.x, self.position.y)
         shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED * 0.75
 
@@ -182,7 +208,7 @@ class Player(CircleShape):
             pygame.draw.polygon(screen, "crimson", self.triangle_left_flame(), 0)
 
         #draw ship thruster/gun pylons
-        wm = self.weapon_mode
+        wm = self.weapon_mode[1]
         color1, color2 = self.pylon_palette[wm][0], self.pylon_palette[wm][1]
         pygame.draw.polygon(screen, color1, self.triangle_pylonright(0.5), 0)
         pygame.draw.polygon(screen, color1, self.triangle_pylonleft(0.5), 0)
@@ -224,6 +250,12 @@ class Player(CircleShape):
         else:
             self.god_mode = False
 
+    def toggle_infinite_ammo(self):
+        if self.infinite_ammo == False:
+            self.infinite_ammo = True
+        else:
+            self.infinite_ammo = False
+
 
     def update(self, dt: float) -> None:
         keys = pygame.key.get_pressed()
@@ -254,14 +286,14 @@ class Player(CircleShape):
 
         #temporary???
         if keys[pygame.K_1]:
-            self.weapon_mode = 0
+            self.weapon_mode = ["Plasma Buster", 0]
         if keys[pygame.K_2]:
-            self.weapon_mode = 1
+            self.weapon_mode = ["Pulse Cannon", 1]
         if keys[pygame.K_3]:
-            self.weapon_mode = 2
+            self.weapon_mode = ["Shard Blaster", 2]
         if keys[pygame.K_4]:
-            self.weapon_mode = 3
+            self.weapon_mode = ["Bolt Caster", 3]
         if keys[pygame.K_5]:
-            self.weapon_mode = 4
+            self.weapon_mode = ["Flak Pulsar", 4]
         #if keys[pygame.K_6]:
         #    self.weapon = 5

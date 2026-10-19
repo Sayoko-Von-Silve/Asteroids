@@ -1,4 +1,5 @@
 import circleshape, pygame, random
+from powerups import PowerUp
 from constants import LINE_WIDTH, ASTEROID_MIN_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT
 from logger import log_event
 
@@ -56,6 +57,10 @@ class Asteroid(circleshape.CircleShape):
 
     def split(self) -> int:
         self.kill()
+        powerup_drop_chance = random.randint(1, 20)
+        if powerup_drop_chance == 20:
+            powerup = PowerUp(self.position.x, self.position.y, 5)
+            powerup.velocity = self.velocity.rotate(random.uniform(20, 50) * 1.2) * random.uniform(0.3, 0.7)
         if self.radius <= ASTEROID_MIN_RADIUS:
             return 3
         elif self.radius <= ASTEROID_MIN_RADIUS * 2:
