@@ -1,14 +1,17 @@
 import pygame, random
 from constants import PLAYER_RADIUS, LINE_WIDTH, PLAYER_SPEED, PLAYER_TURN_SPEED, PLAYER_SHOOT_SPEED, SCREEN_HEIGHT, SCREEN_WIDTH
 from circleshape import CircleShape
-from shot import Shot, Bolt, Flak
+from shot import Shot, Pulse, Bolt, Flak
 
 class Player(CircleShape):
     def __init__(self, x: float, y: float, radius: float) -> None:
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 180
         self.shoot_cooldown = 0.0
-        self.invuln_timer = 3
+        self.overshield_timer = 3
+        self.shield_level = 3
+        self.shield_cycle = 0
+        self.health = 3
         self.god_mode = False
         self.infinite_ammo = False
         self.inputdelay = 0
@@ -135,11 +138,12 @@ class Player(CircleShape):
         else:
             muzzle = self.triangle_pylonleft()[0]
             self.pylon_gun_switch = 1
-        shot = Shot(muzzle.x, muzzle.y)
+        shot = Pulse(muzzle.x, muzzle.y)
         shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED * 1.2
 
+    #I want to make the shots into shards later... Have a similar damage to pulse.
     def shard_blaster(self):
-        if self.weapon_ammo < 1 and self.infinite_ammo == False:
+        if self.weapon_ammo < 2 and self.infinite_ammo == False:
             return
         if self.shoot_cooldown > 0:
             return
@@ -153,7 +157,7 @@ class Player(CircleShape):
             shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation - 15 + (i * 5)) * PLAYER_SHOOT_SPEED * (random.randint(70, 100)/100)
 
     def bolt_caster(self):
-        if self.weapon_ammo < 1 and self.infinite_ammo == False:
+        if self.weapon_ammo < 3 and self.infinite_ammo == False:
             return
         if self.shoot_cooldown > 0:
             return
@@ -166,7 +170,7 @@ class Player(CircleShape):
         shot.velocity = pygame.Vector2(0, 1).rotate(self.rotation) * PLAYER_SHOOT_SPEED * 1.5
 
     def flak_pulsar(self):
-        if self.weapon_ammo < 1 and self.infinite_ammo == False:
+        if self.weapon_ammo < 3 and self.infinite_ammo == False:
             return
         if self.shoot_cooldown > 0:
             return
@@ -238,11 +242,25 @@ class Player(CircleShape):
             else:
                 pygame.draw.polygon(screen, "gray10", self.triangle_forward_flame(), LINE_WIDTH + 1)
 
+        #draw regular shield
+        if self.shield_level > 0 and self.shield_level <= 1 and self.shield_cycle > 0.02:
+            pygame.draw.circle(screen, "deepskyblue2", (int(shield_center.x), int(shield_center.y)), self.radius + 10, LINE_WIDTH - 1)
+        if self.shield_level > 1 and self.shield_level <= 2 and self.shield_cycle > 0.04:
+            pygame.draw.circle(screen, "deepskyblue3", (int(shield_center.x), int(shield_center.y)), self.radius + 10, LINE_WIDTH)
+        if self.shield_level > 2 and self.shield_cycle > 0.06:
+            pygame.draw.circle(screen, "deepskyblue4", (int(shield_center.x), int(shield_center.y)), self.radius + 10, LINE_WIDTH)
+        if self.shield_level > 1 and self.shield_level <= 2 and self.shield_cycle > 0.08 and self.shield_cycle < 0.16:
+            pygame.draw.circle(screen, "deepskyblue2", (int(shield_center.x), int(shield_center.y)), self.radius + 11, LINE_WIDTH)
+        if self.shield_level > 2 and self.shield_cycle > 0.1 and self.shield_cycle < 0.24:
+            pygame.draw.circle(screen, "deepskyblue3", (int(shield_center.x), int(shield_center.y)), self.radius + 11, LINE_WIDTH)
+        if self.shield_level > 2 and self.shield_cycle > 0.12:
+            pygame.draw.circle(screen, "deepskyblue2", (int(shield_center.x), int(shield_center.y)), self.radius + 12, LINE_WIDTH)
 
-        if self.invuln_timer > 0 and int(self.invuln_timer * 5) % 2 == 0:
-            pygame.draw.circle(screen, "purple", (int(shield_center.x), int(shield_center.y)), self.radius + 12, LINE_WIDTH)
-        elif self.invuln_timer > 0:
-            pygame.draw.circle(screen, "magenta", (int(shield_center.x), int(shield_center.y)), self.radius + 13, LINE_WIDTH)
+        #draw invulnerability shield
+        if self.overshield_timer > 0 and int(self.overshield_timer * 5) % 2 == 0:
+            pygame.draw.circle(screen, "purple", (int(shield_center.x), int(shield_center.y)), self.radius + 13, LINE_WIDTH * 2)
+        elif self.overshield_timer > 0:
+            pygame.draw.circle(screen, "magenta", (int(shield_center.x), int(shield_center.y)), self.radius + 14, LINE_WIDTH * 2)
 
     def toggle_god_mode(self):
         if self.god_mode == False:
@@ -263,8 +281,12 @@ class Player(CircleShape):
             self.shoot_cooldown -= dt
         if self.shoot_cooldown < 0:
             self.shoot_cooldown = 0
-        if self.invuln_timer > 0:
-            self.invuln_timer -= dt
+        if self.overshield_timer > 0:
+            self.overshield_timer -= dt
+        if self.shield_cycle > 0:
+            self.shield_cycle -= dt
+        elif self.shield_cycle <= 0:
+            self.shield_cycle = 0.3
         if self.inputdelay > 0:
             self.inputdelay -= 1
         if self.rng_timer > 0:

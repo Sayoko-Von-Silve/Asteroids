@@ -21,17 +21,21 @@ class PowerUp(circleshape.CircleShape):
 
     def powerup_type(self) -> None:
         if self.type == "default":
-            self.type = random.choices(["Life", "Shield", "Ammo"], weights=[1, 3, 6], k=1)[0]
+            self.type = random.choices(["Life", "Shield", "Overshield", "Ammo"], weights=[1, 2, 2, 4], k=1)[0]
             if self.type == "Life":
                 self.lifetime = 8.0
                 self.color1 = "slategray4"
                 self.color2 = "silver"
             elif self.type == "Shield":
                 self.lifetime = 10.0
+                self.color1 = "deepskyblue4"
+                self.color2 = "deepskyblue2"
+            elif self.type == "Overshield":
+                self.lifetime = 10.0
                 self.color1 = "purple"
                 self.color2 = "magenta"
             elif self.type == "Ammo":
-                self.lifetime = 12.0
+                self.lifetime = 14.0
                 self.color1 = "aquamarine4"
                 self.color2 = "aquamarine3"
     
@@ -47,5 +51,5 @@ class PowerUp(circleshape.CircleShape):
         if self.lifetime <= 0:
             self.kill()
         self.position += self.velocity * dt
-        self.rotation += 200 * dt
+        self.rotation += 250 * dt
         self.boundary_check(SCREEN_WIDTH, SCREEN_HEIGHT)

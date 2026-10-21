@@ -5,11 +5,27 @@ from constants import SHOT_RADIUS, SCREEN_WIDTH, SCREEN_HEIGHT, SHOT_SPEED_MULTI
 class Shot(circleshape.CircleShape):
     def __init__(self, x: float, y: float, radius: float = SHOT_RADIUS) -> None:
         super().__init__(x, y, radius)
-        self.lifetime = 2.0 # seconds
+        self.lifetime = 3.0 # seconds
 
     def draw(self, surface: pygame.Surface) -> None:
         pygame.draw.circle(surface, "aquamarine2", (int(self.position.x), int(self.position.y)), self.radius)
         pygame.draw.circle(surface, "magenta", (int(self.position.x), int(self.position.y)), self.radius - 2)
+
+    def update(self, dt: float) -> None:
+        self.lifetime -= dt
+        if self.lifetime <= 0:
+            self.kill()
+        self.position += self.velocity * SHOT_SPEED_MULTIPLIER * dt
+        self.boundary_check(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+class Pulse(circleshape.CircleShape):
+    def __init__(self, x: float, y: float, radius: float = SHOT_RADIUS - 1) -> None:
+        super().__init__(x, y, radius)
+        self.lifetime = 2.0 # seconds
+
+    def draw(self, surface: pygame.Surface) -> None:
+        pygame.draw.circle(surface, "turquoise4", (int(self.position.x), int(self.position.y)), self.radius)
+        pygame.draw.circle(surface, "turquoise3", (int(self.position.x), int(self.position.y)), self.radius - 1)
 
     def update(self, dt: float) -> None:
         self.lifetime -= dt
@@ -40,6 +56,7 @@ class Bolt(circleshape.CircleShape):
         self.rotation = 180
         self.lifetime = 10.0 # seconds
         self.splinter = False
+        self.ghost_time = 0 # ghost time limits damage output and calculations after breaking an asteroid.
 
     def draw(self, surface: pygame.Surface) -> None:
         direction = self.velocity.normalize()
@@ -58,6 +75,8 @@ class Bolt(circleshape.CircleShape):
         pygame.draw.polygon(surface, "silver", [a,b,c,d], 0)
 
     def update(self, dt: float) -> None:
+        if self.ghost_time > 0:
+            self.ghost_time -= dt
         self.lifetime -= dt
         if self.lifetime <= 0:
             self.kill()

@@ -5,7 +5,7 @@ from player import Player
 from logger import log_state, log_event
 from asteroid import *
 from asteroidfield import AsteroidField
-from shot import Shot, Bolt, Flak, Shrapnel
+from shot import Shot, Pulse, Bolt, Flak, Shrapnel
 from powerups import PowerUp
 
 def main():
@@ -20,9 +20,11 @@ def main():
     dt = 0.0
     game_time = 0.0
     minutes, seconds = 0, 0
+    carryover_inf = 0
     score = 0
     lives = 3
-    score_font = pygame.font.SysFont("Arial", 24)
+    score_font = pygame.font.SysFont("Consolas", 24)
+    weapon_font = pygame.font.SysFont("Consolas", 36)
     shots = pygame.sprite.Group()
     powerups = pygame.sprite.Group()
     updatable = pygame.sprite.Group()
@@ -30,6 +32,7 @@ def main():
     asteroids = pygame.sprite.Group()
     asteroidfield = pygame.sprite.Group()
     Shot.containers = (shots, updatable, drawable)
+    Pulse.containers = (shots, updatable, drawable)
     Bolt.containers = (shots, updatable, drawable)
     Flak.containers = (shots, updatable, drawable)
     Shrapnel.containers = (shots, updatable, drawable)
@@ -56,56 +59,105 @@ def main():
         updatable.update(dt)
 
         for asteroid in asteroids:
-            if asteroid.collides_with(player) and player.invuln_timer <= 0 and player.god_mode == False:
+            if asteroid.collides_with(player) and player.overshield_timer <= 0 and player.god_mode == False:
                 log_event("player_hit")
-                lives -= 1
+                #if player shields are still up, simply destroy the asteroid and take away one layer of shield.
+                if player.shield_level > 0:
+                    score += asteroid.destroy()
+                    player.shield_level -= 1
+                    break
+
+                if player.health > 1:
+                    score += asteroid.destroy()
+                    player.health -= 1
+                    break
+
+                #if shields are down, and lives are empty, game over.
                 if lives <= 0:
                     print("Game Over!")
                     if score < 0:
                         score = 0
                     print(f"Final Score: {score}")
                     sys.exit()
+
+                #part 1, if infinite ammo is on, carry over the weapon to the next spawn of player.
                 if player.infinite_ammo == True:
                     carryover_inf = 1
                     carryover_gun = player.weapon_mode
-                player.kill()
+
+                #asteroid split, score loss, player kill, lost life, and player respawn.
                 score -= asteroid.split() * 10
+                player.kill()
+                lives -= 1
                 player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, PLAYER_RADIUS)
+
+                #part 2, if infinite ammo is on, carry over the weapon to the next spawn of player.
                 if carryover_inf == 1:
                     player.infinite_ammo = True
                     carryover_inf = 0
                     player.weapon_mode = carryover_gun
                 break
-            if asteroid.collides_with(player) and player.invuln_timer > 0 and player.god_mode == False:
+
+            if asteroid.collides_with(player) and player.overshield_timer > 0 and player.god_mode == False:
                 score += asteroid.split()
                 break
+
             for shot in shots:
                 if asteroid.collides_with(shot):
                     log_event("asteroid_shot")
                     if shot.__class__ == Shot:
                         shot.kill()
-                        score += asteroid.split()
-                    elif shot.__class__ == Bolt:
+                        asteroid.health -= 3
+                        if asteroid.health <= 0:
+                            score += asteroid.split()
+                        break
+                    elif shot.__class__ == Pulse:
+                        shot.kill()
+                        asteroid.health -= 2
+                        if asteroid.health <= 0:
+                            score += asteroid.split()
+                        break
+                    elif shot.__class__ == Bolt and shot.ghost_time <= 0:
                         shot.lifetime -= 1.2
                         shot.splinter = True
-                        score += asteroid.split()
+                        shot.ghost_time = 0.1
+                        asteroid.health -= 5
+                        if asteroid.health <= 0:
+                            score += asteroid.split()
+                        break
                     elif shot.__class__ == Flak:
                         shot.lifetime = 0
-                        score += asteroid.split()
+                        asteroid.health -= 2
+                        if asteroid.health <= 0:
+                            score += asteroid.split()
+                        break
                     elif shot.__class__ == Shrapnel:
                         shot.kill()
-                        score += asteroid.split()
+                        asteroid.health -= 1
+                        if asteroid.health <= 0:
+                            score += asteroid.split()
+                        break
                     break
 
         for powerup in powerups:
             if powerup.collides_with(player):
                 if powerup.type == "Life":
                     powerup.kill()
-                    lives += 1
+                    if player.health < 3:
+                        player.health += 1
+                    else:
+                        lives += 1
                     break
                 elif powerup.type == "Shield":
                     powerup.kill()
-                    player.invuln_timer += 10
+                    if player.shield_level < 3:
+                        player.shield_level += 1
+                    elif player.shield_level == 3:
+                        player.overshield_timer += 10
+                    break
+                elif powerup.type == "Overshield":
+                    powerup.kill()
+                    player.overshield_timer += 10
                     break
                 elif powerup.type == "Ammo":
                     powerup.kill()
@@ -121,13 +173,13 @@ def main():
 
 
         # draw score, lives, and time
-        score_text = score_font.render(f"SCORE: [{score}]", True, "firebrick2")
-        lives_text = score_font.render(f"[{lives}] :LIVES", True, "firebrick2")
+        score_text = score_font.render(f"SCORE:[{score}]", True, "firebrick2")
+        lives_text = score_font.render(f"[{lives}]:EXTRA LIVES", True, "firebrick2")
         time_text = score_font.render(f"[{minutes:02}:{seconds:02}]", True, "firebrick3")
         if player.weapon_mode[1] == 0:
-            weapon_text = score_font.render(f"WEAPON: {player.weapon_mode[0]}", True, "firebrick3")
+            weapon_text = weapon_font.render(f"{player.weapon_mode[0]}, AMMO: \u221e", True, "firebrick3")
         else:
-            weapon_text = score_font.render(f"WEAPON: {player.weapon_mode[0]}, AMMO: {player.weapon_ammo}", True, "firebrick3")
+            weapon_text = weapon_font.render(f"{player.weapon_mode[0]}, AMMO: {player.weapon_ammo}", True, "firebrick3")
         screen.blit(score_text, (10, 10))
         screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
         screen.blit(time_text, ((SCREEN_WIDTH - time_text.get_width()) // 2, 10))

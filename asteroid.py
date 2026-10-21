@@ -6,6 +6,7 @@ from logger import log_event
 class Asteroid(circleshape.CircleShape):
     def __init__(self, x: float, y: float, radius: float) -> None:
         super().__init__(x, y, radius)
+        self.health = radius / ASTEROID_MIN_RADIUS #health decreases from radius, from 54=3, to 36=2, to 18=1.
         self.asteroid_shape = self.asteroid_shape_constructor()
         self.crater_shape = self.crater_shape_constructor()
         palette = [("#71858A", "#394C52"),  ("#807B72", "#494640"), ("#A9A9A9", "#5C5C5C"), ("#B0B0B0", "#4D4D4D"), ("#C0C0C0", "#3F3F3F"),]
@@ -76,6 +77,19 @@ class Asteroid(circleshape.CircleShape):
             ast2 = Asteroid(self.position.x, self.position.y, self.radius - ASTEROID_MIN_RADIUS)
             ast1.velocity = self.velocity.rotate(random.uniform(20, 50) * 1.2) * random.uniform(0.9, 1.5)
             ast2.velocity = self.velocity.rotate(random.uniform(20, -50) * 1.2) * random.uniform(0.9, 1.5)
+            return 1
+
+    def destroy(self) -> int:
+        self.kill()
+        powerup_drop_chance = random.randint(1, 20)
+        if powerup_drop_chance == 20:
+            powerup = PowerUp(self.position.x, self.position.y, 5)
+            powerup.velocity = self.velocity.rotate(random.uniform(20, 50) * 1.2) * random.uniform(0.3, 0.7)
+        if self.radius <= ASTEROID_MIN_RADIUS:
+            return 3
+        elif self.radius <= ASTEROID_MIN_RADIUS * 2:
+            return 2
+        else:
             return 1
 
 
